@@ -7,9 +7,6 @@ const port = 3000
 let h1Count = 0
 let h2Count = 0
 
-let h1Ids = []
-let h2Ids = []
-
 function update() {
     const total = h1Count + h2Count
     const h1r = h1Count / total || 0
@@ -27,9 +24,6 @@ diff_r   : ${dr.toFixed(4).padStart(10, ' ')}%
 function clear() {
     h1Count = 0
     h2Count = 0
-
-    h1Ids = []
-    h2Ids = []
 
     update()
 }
@@ -56,8 +50,8 @@ app.get('/', (_req, res) => {
         code: 200,
         msg: 'OK',
         data: {
-            h1Ids,
-            h2Ids
+            h1Count,
+            h2Count
         }
     })
 })
@@ -75,14 +69,11 @@ app.post('/post-test-clear', (_req, res) => {
 
 app.post('/post-test', (req, res) => {
     const methodName = req.body.method
-    const id = req.body.id
     res.on('finish', () => {
         if (methodName === 'h1') {
             h1Count += 1
-            h1Ids.push(id)
         } else if (methodName === 'h2') {
             h2Count += 1
-            h2Ids.push(id)
         } else {
             console.log('req.body', req.body)
         }
