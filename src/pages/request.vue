@@ -20,6 +20,9 @@
                         <template #append>个请求</template>
                     </el-input>
                 </el-col>
+                <el-col :span="6">
+                    <el-button :loading="running" type="primary" @click="run">开始</el-button>
+                </el-col>
             </el-row>
             <el-row :gutter="24" class="mt-2">
                 <el-col :span="3">循环配置</el-col>
