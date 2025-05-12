@@ -142,7 +142,8 @@ const h2IdMap = new Map<string, string>()
 
 
 const h1server = 'https://localhost1:444/post-test' // h1
-const h2server = 'https://localhost2:443/post-test' // h2
+// const h2server = 'https://localhost2:443/post-test' // h2
+const h2server = 'https://localhost2:445/post-test' // h1
 
 const launchRequestCount = ref(0)
 
