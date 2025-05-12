@@ -64,6 +64,9 @@
                 <el-col :span="8">
                     <el-statistic title="h1 失败" :value="h1FailedCount" />
                 </el-col>
+                <el-col :span="8">
+                    <el-statistic title="h1 未失败" :value="launchRequestCount - h1FailedCount" />
+                </el-col>
             </el-row>
         </div>
     </div>
@@ -75,6 +78,9 @@
                 </el-col>
                 <el-col :span="8">
                     <el-statistic title="h2 失败" :value="h2FailedCount" />
+                </el-col>
+                <el-col :span="8">
+                    <el-statistic title="h2 未失败" :value="launchRequestCount - h2FailedCount" />
                 </el-col>
             </el-row>
         </div>

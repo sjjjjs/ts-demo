@@ -29,7 +29,7 @@ function clear() {
 }
 
 function ramdonMS() {
-    return Math.round(Math.random() * 100) + 50
+    return Math.round(Math.random() * 100) + 100
 }
 
 app.use((_req, res, next) => {
