@@ -49,8 +49,13 @@
     <div class="p-4 mx-auto max-w-7xl">
         <div class="content mt-4">
             <el-row :gutter="24">
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-statistic title="发起" :value="launchRequestCount" />
+                </el-col>
+                <el-col :span="6">
+                    <el-statistic title="用时" :value="duration / 1000" :precision="2">
+                        <template #suffix>秒</template>
+                    </el-statistic>
                 </el-col>
             </el-row>
         </div>
@@ -58,13 +63,13 @@
     <div class="p-4 mx-auto max-w-7xl">
         <div class="content mt-4">
             <el-row :gutter="24">
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-statistic title="h1 成功" :value="h1SuccessCount" />
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-statistic title="h1 失败" :value="h1FailedCount" />
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-statistic title="h1 未失败" :value="launchRequestCount - h1FailedCount" />
                 </el-col>
             </el-row>
@@ -73,13 +78,13 @@
     <div class="p-4 mx-auto max-w-7xl">
         <div class="content mt-4">
             <el-row :gutter="24">
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-statistic title="h2 成功" :value="h2SuccessCount" />
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-statistic title="h2 失败" :value="h2FailedCount" />
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-statistic title="h2 未失败" :value="launchRequestCount - h2FailedCount" />
                 </el-col>
             </el-row>
@@ -88,18 +93,24 @@
     <div class="p-4 mx-auto max-w-7xl">
         <div class="content mt-4">
             <el-row :gutter="24">
-                <el-col :span="8">
-                    <el-statistic title="差值" :value="h1SuccessCount - h2SuccessCount" />
+                <el-col :span="6">
+                    <el-statistic title="已成功差值" :value="h1SuccessCount - h2SuccessCount" />
                 </el-col>
-                <el-col :span="8">
-                    <el-statistic title="比例" :value="(h1SuccessCount - h2SuccessCount) / h1SuccessCount * 100 || 0"
+                <el-col :span="6">
+                    <el-statistic title="已成功比例" :value="(h1SuccessCount - h2SuccessCount) / h1SuccessCount * 100 || 0"
                         :precision="2">
                         <template #suffix>%</template>
                     </el-statistic>
                 </el-col>
-                <el-col :span="8">
-                    <el-statistic title="用时" :value="duration / 1000" :precision="2">
-                        <template #suffix>秒</template>
+                <el-col :span="6">
+                    <el-statistic title="未失败差值"
+                        :value="(launchRequestCount - h1FailedCount) - (launchRequestCount - h2FailedCount)" />
+                </el-col>
+                <el-col :span="6">
+                    <el-statistic title="未失败比例"
+                        :value="((launchRequestCount - h1FailedCount) - (launchRequestCount - h2FailedCount)) / (launchRequestCount - h1FailedCount) * 100 || 0"
+                        :precision="2">
+                        <template #suffix>%</template>
                     </el-statistic>
                 </el-col>
             </el-row>
