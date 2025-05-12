@@ -123,9 +123,9 @@ const h2IdMap = new Map<string, string>()
     ; (window as any).h1IdMap = h1IdMap
     ; (window as any).h2IdMap = h2IdMap
 
-const h1server = 'http://local1.com:3000/post-test'
-// const h1server = 'https://localhost/post-test'
-const h2server = 'https://localhost/post-test'
+
+const h1server = 'https://localhost1:444/post-test' // h1
+const h2server = 'https://localhost2:443/post-test' // h2
 
 const launchRequestCount = ref(0)
 
@@ -236,8 +236,8 @@ function run() {
     for (let i = 0; i < maxReuqestCount.value; i++) {
         const id = uuidv4()
 
-        h2Send(id, payload)
         h1Send(id, payload)
+        h2Send(id, payload)
 
         launchRequestCount.value += 1
     }
