@@ -8,4 +8,19 @@ export default defineConfig({
     vue(),
     tailwindcss(),
   ],
+  resolve: {
+    alias: {
+      '@': '/src/',
+      "@libs": '/src/libs/'
+    }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/api/, '/v1')
+      }
+    }
+  }
 })
