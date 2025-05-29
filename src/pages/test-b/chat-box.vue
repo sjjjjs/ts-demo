@@ -1,24 +1,44 @@
 <template>
-    <div class="w-[100vw] h-[100vh] overflow-auto pb-[300px]" ref="containerRef">
-        <div class="w-[600px] mx-auto p-2 " v-for="item in messageList" :data-source="JSON.stringify(item, null, '  ')">
+    <div class="h-[100%] overflow-auto pb-[80px] bg-white" ref="containerRef">
+        <div class="max-w-[600px] mx-auto p-2 " v-for="item in messageList"
+            :data-source="JSON.stringify(item, null, '  ')" :key="item.id">
             <div class="pb-2 text-xs text-center">{{ formatTime(item.value.createAt) }}</div>
-            <div class=" font-bold pb-4">
+            <div class=" font-bold p-4 border border-blue-200 bg-blue-100 rounded-xl">
                 <el-tooltip :content="item.id" placement="top">
                     <a class=" cursor-pointer" :id="item.id" :href="`#${item.id}`"># </a>
                 </el-tooltip>
                 <span>{{ item.value.query }}</span>
             </div>
-            <div class="p-4 bg-gray-100 rounded" v-if="item.value.answer">
-                <markdown :value="item.value.answer"></markdown>
-            </div>
+            <template v-if="item.value.done">
+                <div class="px-2" v-if="item.value.answer">
+                    <markdown :value="item.value.answer || '[没有内容]'"></markdown>
+                </div>
+
+                <div class=" px-2 mt-2" v-if="item.value.id">
+                    反馈：
+                    <el-button
+                        :type="item.value.feedback && item.value.feedback.rating === 'like' ? 'primary' : 'default'"
+                        @click="() => feedback(item.id, 'like')">喜欢</el-button>
+                    <el-button
+                        :type="item.value.feedback && item.value.feedback.rating === 'dislike' ? 'primary' : 'default'"
+                        @click="() => feedback(item.id, 'dislike')">不喜欢</el-button>
+                </div>
+            </template>
+            <template v-else>
+                <div class="px-2 rounded" v-if="item.value.answer">
+                    <markdown :value="item.value.answer || '[没有内容]'"></markdown>
+                </div>
+                <div v-else class=" h-[60px]" v-loading="true"></div>
+            </template>
         </div>
     </div>
-    <div class="fixed z-10 bg-white left-0 bottom-0 right-0 p-4">
+    <div class="absolute z-10 bg-gray-200 left-0 bottom-0 right-0 p-2">
         <div class=" absolute top-[-100px] right-[50px]" v-if="!enabledAutoScroll">
             <el-button @click="applyAutoScroll">到底部({{ scrollDistanceToBottom }})</el-button>
         </div>
-        <div class=" w-[600px] mx-auto p-2">
-            <el-input v-model="queryInput" @keydown.enter="send" :disabled="queryMessageLoading"></el-input>
+        <div class=" max-w-[600px] mx-auto p-2">
+            <el-input v-model="queryInput" @keydown.enter="send" v-if="!queryMessageLoading"></el-input>
+            <el-button v-else type="danger" @click="stopMessage">停止</el-button>
         </div>
     </div>
 </template>
@@ -26,12 +46,12 @@
 import { useConversation } from '@/libs/ai-chat/hooks/useConversation';
 import type { Dify } from '@/libs/ai-chat/types';
 import { ref } from 'vue';
-import markdown from './test-b/markdown.vue';
+import markdown from './markdown.vue';
 import { useAutoScrollBottom } from '@/libs/ai-chat/hooks/useAutoScrollBottom';
 import dayjs from 'dayjs';
 
 function formatTime(d: number) {
-    return dayjs(d * 1000).format('YYYY-MM-DD HH-mm-ss')
+    return dayjs(d * 1000).format('YYYY-MM-DD HH:mm:ss')
 }
 
 const queryInput = ref('')
@@ -47,6 +67,11 @@ interface UniversalMessage {
     error: Error | null
     done: boolean,
     createAt: number
+    taskId?: string
+    feedback?: {
+        rating: string
+        content?: string
+    }
 }
 const historyMessageProssesor: Dify.HistoryMessageProcessHandler<UniversalMessage> = (msg) => {
     return {
@@ -56,7 +81,9 @@ const historyMessageProssesor: Dify.HistoryMessageProcessHandler<UniversalMessag
         answer: msg.answer,
         error: null,
         done: true,
-        createAt: msg.created_at
+        createAt: msg.created_at,
+        taskId: undefined,
+        feedback: msg.feedback || undefined
     }
 }
 
@@ -105,10 +132,13 @@ const streamingEventProcessorFactory: Dify.StreamingEventProcessorFactory<Univer
     }
 }
 
-const searchParams = new URLSearchParams(location.search)
-const conversationId = searchParams.get('converstationId') || ''
+const props = defineProps({
+    conversationId: String
+})
 
-const { sendMessage, messageList, queryMessageLoading } = useConversation({
+const conversationId = props.conversationId || ''
+
+const { sendMessage, messageList, queryMessageLoading, stopMessage, feedback: fb } = useConversation({
     baseUrl: '/api',
     apiKey: 'app-huIlz3nTd9FyPHbSgwRAj5JP',
     user: 'abc-123',
@@ -116,7 +146,7 @@ const { sendMessage, messageList, queryMessageLoading } = useConversation({
     historyMessageProssesor,
     streamingEventProcessorFactory,
     id: conversationId,
-    onMessageListChange
+    onMessageListChange,
 })
 
 function send() {
@@ -127,5 +157,10 @@ function send() {
 }
 function onMessageListChange() {
     adjust()
+}
+function feedback(id: string, rating: string, content?: string): void {
+    fb(id, rating, content).then(r => {
+        console.log('r', r)
+    })
 }
 </script>

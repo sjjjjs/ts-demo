@@ -57,7 +57,7 @@ export function useConversationList(options: {
     }
 
     function reload() {
-        list.value = []
+        // list.value = []
         lastId.value = undefined
         hasMore.value = true
 

@@ -40,7 +40,6 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { useConversationList } from '@/libs/ai-chat/hooks/useConversationList'
-import { useDifyApi } from '@libs/ai-chat/hooks/useDifyApi'
 import { ref } from 'vue'
 
 function formatTime(num: number): string {

@@ -40,6 +40,20 @@ export namespace Dify {
         [key: string]: unknown
     }
 
+    export interface IdData<T> {
+        id: string
+        value: T
+    }
+
+    export interface BaseMessage {
+        id: string
+        query: string
+        answer: string
+        feedback?: {
+            rating: string
+            content?: string
+        }
+    }
 
     export type HistoryMessageProcessHandler<T> = (message: Message) => T
 

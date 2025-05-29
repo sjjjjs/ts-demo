@@ -1,13 +1,11 @@
 import { nextTick, ref, type Ref } from "vue"
 
-interface IdData<T> {
-    id: string
-    value: T
-}
-export function useMessages<T>(options: {
+import { type Dify } from '@libs/ai-chat/types'
+
+export function useMessages<T extends Dify.BaseMessage>(options: {
     onChange?: () => void
 } = {}) {
-    const messaegList = ref([]) as Ref<IdData<T>[]>
+    const messaegList = ref([]) as Ref<Dify.IdData<T>[]>
 
     let calling: boolean = false
     function dataChangeHook() {
@@ -36,10 +34,20 @@ export function useMessages<T>(options: {
         })
         dataChangeHook()
     }
-    function update(id: string, newValue: T): void {
+    function replace(id: string, newValue: T): void {
         const item = messaegList.value.find(item => item.id === id)
         if (item) {
             item.value = newValue
+        }
+        dataChangeHook()
+    }
+    function override(id: string, update: Partial<T>): void {
+        const item = messaegList.value.find(item => item.id === id)
+        if (item) {
+            item.value = {
+                ...item.value,
+                ...update
+            }
         }
         dataChangeHook()
     }
@@ -48,6 +56,7 @@ export function useMessages<T>(options: {
         list: messaegList,
         append,
         prepend,
-        update
+        replace,
+        override
     }
 }

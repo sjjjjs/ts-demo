@@ -5,7 +5,7 @@ import type { Dify } from "../types";
 import { useMessages } from "./useMessages";
 import { v4 as uuidv4 } from 'uuid';
 
-export function useConversation<T>(options: {
+export function useConversation<T extends Dify.BaseMessage>(options: {
     baseUrl: string,
     apiKey?: string,
     user?: string,
@@ -21,7 +21,8 @@ export function useConversation<T>(options: {
     const {
         list: messageList,
         append: messageListAppend,
-        update: updateMessage
+        replace: updateMessage,
+        override: overrideMessage,
     } = useMessages<T>({
         onChange: options.onMessageListChange
     })
@@ -45,10 +46,18 @@ export function useConversation<T>(options: {
             message_id: id,
             rating,
             content
+        }).then(() => {
+            overrideMessage(id, {
+                feedback: {
+                    rating,
+                    content
+                }
+            } as Partial<T>)
         })
     }
 
     const lock = ref(false)
+    const currentTaskId = ref('')
     async function sendMessage(query: string) {
         lock.value = true
         const target = await difyApi.sendMessageStreaming({
@@ -70,12 +79,28 @@ export function useConversation<T>(options: {
             processor.handleEvent(info)
             const msg = processor.getCurrent()
 
-            console.log('msg', msg)
             updateMessage(id, msg)
+
+            const taskId = (info.data?.value.task_id || '') as string
+            if (taskId && !currentTaskId.value) {
+                currentTaskId.value = taskId
+            }
         })
 
         await processor.promise()
         lock.value = false
+    }
+
+    const stopMessagePending = ref(false)
+    async function stopMessage(): Promise<void> {
+        if (currentTaskId.value) {
+            stopMessagePending.value = true
+            return difyApi.stopMessage({
+                task_id: currentTaskId.value
+            }).then(() => { }).finally(() => {
+                stopMessagePending.value = false
+            })
+        }
     }
 
     return {
@@ -83,6 +108,8 @@ export function useConversation<T>(options: {
         queryMessageLoading: lock,
         feedback,
         sendMessage,
-        messageList
+        messageList,
+        stopMessage,
+        stopMessagePending
     }
 }
