@@ -4,8 +4,8 @@ import { safeJsonParse, safeJsonStringify } from '../utils/jsonUtil'
 
 export function useDifyApi(
     baseUrl: string,
-    apiKey: string,
-    user: string
+    apiKey?: string,
+    user?: string
 ) {
 
     interface Cancellable {
@@ -66,13 +66,13 @@ export function useDifyApi(
     async function renameConversation(params: {
         conversation_id: string
         name: string
-        auto_generate: boolean
+        auto_generate?: boolean
     } & Cancellable) {
         return request<RenameConversationResponse>({
             method: 'POST',
-            url: apiOf(baseUrl, `/conversations/:${params.conversation_id}/name`),
+            url: apiOf(baseUrl, `/conversations/${params.conversation_id}/name`),
             headers: getBaseHeaders(apiKey),
-            body: safeJsonStringify({
+            body: serialize({
                 name: params.name,
                 auto_generate: params.auto_generate,
                 user
@@ -89,9 +89,9 @@ export function useDifyApi(
     } & Cancellable) {
         return request<DeleteConversationResponse>({
             method: 'DELETE',
-            url: apiOf(baseUrl, `/conversations/:${params.conversation_id}`),
+            url: apiOf(baseUrl, `/conversations/${params.conversation_id}`),
             headers: getBaseHeaders(apiKey),
-            body: safeJsonStringify({
+            body: serialize({
                 user
             }),
             signal: params.signal
@@ -204,7 +204,7 @@ export function useDifyApi(
             method: 'POST',
             url: apiOf(baseUrl, `/messages/${e(params.message_id)}/feedbacks`),
             headers: getBaseHeaders(apiKey),
-            body: safeJsonStringify({
+            body: serialize({
                 user,
                 rating: params.rating,
                 content: params.content
@@ -223,7 +223,7 @@ export function useDifyApi(
             method: 'POST',
             url: apiOf(baseUrl, `/chat-messages/${e(params.task_id)}/stop`),
             headers: getBaseHeaders(apiKey),
-            body: safeJsonStringify({
+            body: serialize({
                 user
             }),
             signal: params.signal
@@ -258,7 +258,7 @@ export function useDifyApi(
             method: 'POST',
             url: apiOf(baseUrl, '/chat-messages'),
             headers: getBaseHeaders(apiKey),
-            body: safeJsonStringify({
+            body: serialize({
                 query: params.query,
                 inputs: params.inputs,
                 user,
@@ -275,7 +275,7 @@ export function useDifyApi(
             method: 'POST',
             url: apiOf(baseUrl, '/chat-messages'),
             headers: getBaseHeaders(apiKey),
-            body: safeJsonStringify({
+            body: serialize({
                 query: params.query,
                 inputs: params.inputs,
                 user,
@@ -310,11 +310,14 @@ export function useDifyApi(
 function apiOf(baseUrl: string, path: string): string {
     return `${baseUrl}${path}`
 }
-function getBaseHeaders(apiKey: string): Record<string, string> {
-    return {
-        'Authorization': `Bearer ${apiKey}`,
+function getBaseHeaders(apiKey?: string): Record<string, string> {
+    const result: Record<string, string> = {
         'Content-Type': 'application/json'
     }
+    if (apiKey) {
+        result['Authorization'] = `Bearer ${apiKey}`
+    }
+    return result
 }
 
 function e(str: string): string {
@@ -329,6 +332,14 @@ function qs(rec: Record<string, string | number | boolean | undefined>): string 
     }
 
     return searchParams.toString()
+}
+function serialize(data: Record<string, any>): string {
+    for (let key in data) {
+        if (data[key] === undefined) {
+            delete data[key]
+        }
+    }
+    return safeJsonStringify(data)
 }
 
 interface ChunkChatCompletionResponse {

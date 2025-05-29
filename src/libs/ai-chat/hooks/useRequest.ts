@@ -9,7 +9,7 @@ interface UseRequestOptions<T> {
 }
 export function useRequest<T>(
     requestFn: RequestFn<T>,
-    options: UseRequestOptions<T>
+    options: UseRequestOptions<T> = {}
 ) {
     const { manul = false, onSuccess, onError } = options
 
