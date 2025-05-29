@@ -11,6 +11,7 @@
                 </template>
             </el-table-column>
             <el-table-column prop="name" label="标题"></el-table-column>
+
             <el-table-column prop="status" label="状态" width="120px"></el-table-column>
             <el-table-column prop="updated_at" label="更新时间" width="200px">
                 <template #default="{ row }">

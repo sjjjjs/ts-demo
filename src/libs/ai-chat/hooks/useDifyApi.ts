@@ -1,6 +1,7 @@
 
 import { request, sseRequest } from '@libs/ai-chat/utils/requestUtil'
 import { safeJsonParse, safeJsonStringify } from '../utils/jsonUtil'
+import type { Dify } from '../types'
 
 export function useDifyApi(
     baseUrl: string,
@@ -98,19 +99,10 @@ export function useDifyApi(
         })
     }
 
-    interface Conversation {
-        id: string
-        name: string
-        inputs: {}
-        status: string
-        introduction: string
-        created_at: number
-        updated_at: number
-    }
     interface GetConversationsResponse {
         has_more: boolean
         limit: number
-        data: Conversation[]
+        data: Dify.Conversation[]
     }
     async function getConversations(params: {
         last_id?: string
@@ -130,31 +122,11 @@ export function useDifyApi(
         })
     }
 
-    interface Message {
-        id: string
-        conversation_id: string
-        inputs: {}
-        query: string
-        answer: string
-        message_files: {
-            id: string
-            type: 'image'
-            url: string
-            belongs_to: 'user' | 'assistant'
-        }[]
-        status: string
-        introduction: string
-        created_at: number
 
-        feedback: {
-            rating: string
-            content: string
-        } | null
-    }
     interface GetMessagesResponse {
         has_more: boolean
         limit: number
-        data: Message[]
+        data: Dify.Message[]
     }
     async function getMessages(params: {
         conversation_id: string
@@ -342,16 +314,12 @@ function serialize(data: Record<string, any>): string {
     return safeJsonStringify(data)
 }
 
-interface ChunkChatCompletionResponse {
-    event: string
-    [key: string]: unknown
-}
 type DifyStreamingTargetListener = (info: {
     error: Error | null
     done: boolean
     data?: {
         timestamp: number
-        value: ChunkChatCompletionResponse
+        value: Dify.ChunkChatCompletionResponse
     }
 }) => void
 class DifyStreamingTarget {
@@ -360,7 +328,7 @@ class DifyStreamingTarget {
     private error: Error | null = null
     private data: {
         timestamp: number
-        value: ChunkChatCompletionResponse
+        value: Dify.ChunkChatCompletionResponse
     }[] = []
 
     private handleDone(err: Error | null) {
@@ -374,7 +342,7 @@ class DifyStreamingTarget {
             })
         })
     }
-    private handleEvent(value: ChunkChatCompletionResponse) {
+    private handleEvent(value: Dify.ChunkChatCompletionResponse) {
         const data = {
             timestamp: Date.now(),
             value
