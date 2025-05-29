@@ -51,9 +51,36 @@ export namespace Dify {
             value: ChunkChatCompletionResponse
         }
     }
+
+    // // 标准流式数据块（数据对象）
+    // interface StreamingChunk<T> {
+    //     timestamp: number
+    //     done: boolean
+    //     error: Error | null
+    //     data?: T
+    // }
+    // // 标准流式数据块生产端（一个源可以被多个接收器监听）
+    // interface StreamingTarget<T> {
+    //     connect: (listener: StreamingListener<T>) => boolean
+    //     disconnect: (listener: StreamingListener<T>) => boolean
+    // }
+
+    // // 标准流式数据块接收端（一个接收器只对接一个源）
+    // interface StreamingListener<T> {
+    //     watch: (chunk: StreamingChunk<T>) => void
+    // }
+
+
+    // interface MessageBase { }
+    // interface MessageAssembler {
+    //     assemble(): MessageBase
+    // }
+
+
     export interface StreamingEventProcessor<T> {
         handleEvent: (evt: StreamingEventInfo) => void
         getCurrent: () => T
+        promise: () => Promise<void>
     }
     export type StreamingEventProcessorFactory<T> = (params: {
         query: string,

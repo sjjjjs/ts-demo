@@ -409,6 +409,8 @@ class DifyStreamingTarget {
                     } else {
                         this.handleDone(new Error(`Invalid JSON format: ${data}`))
                     }
+                } else if (chunk.startsWith('event: ping')) {
+                    console.info('recived ping event')
                 } else {
                     this.handleDone(new Error(`Invalid chunk format: ${chunk}`))
                 }

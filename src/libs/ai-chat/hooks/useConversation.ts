@@ -9,11 +9,10 @@ export function useConversation<T>(options: {
     baseUrl: string,
     apiKey?: string,
     user?: string,
-
     id?: string,
-
     historyMessageProssesor: Dify.HistoryMessageProcessHandler<T>,
     streamingEventProcessorFactory: Dify.StreamingEventProcessorFactory<T>,
+    onMessageListChange?: () => void
 }) {
     const { baseUrl, apiKey, user, id, historyMessageProssesor } = options
     const difyApi = useDifyApi(baseUrl, apiKey, user)
@@ -23,7 +22,9 @@ export function useConversation<T>(options: {
         list: messageList,
         append: messageListAppend,
         update: updateMessage
-    } = useMessages<T>()
+    } = useMessages<T>({
+        onChange: options.onMessageListChange
+    })
 
     const {
         loading,
@@ -46,7 +47,10 @@ export function useConversation<T>(options: {
             content
         })
     }
+
+    const lock = ref(false)
     async function sendMessage(query: string) {
+        lock.value = true
         const target = await difyApi.sendMessageStreaming({
             conversation_id: conversationId.value,
             query,
@@ -66,14 +70,19 @@ export function useConversation<T>(options: {
             processor.handleEvent(info)
             const msg = processor.getCurrent()
 
+            console.log('msg', msg)
             updateMessage(id, msg)
         })
+
+        await processor.promise()
+        lock.value = false
     }
 
     return {
         historyMessageLoading: loading,
-        messageList,
+        queryMessageLoading: lock,
         feedback,
-        sendMessage
+        sendMessage,
+        messageList
     }
 }

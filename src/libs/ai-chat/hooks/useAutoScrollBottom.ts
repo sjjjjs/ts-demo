@@ -1,4 +1,4 @@
-import { nextTick, onMounted, onUnmounted, ref, type Ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, type Ref } from "vue";
 
 export function useAutoScrollBottom(
     divRef: Ref<HTMLDivElement>,
@@ -12,8 +12,10 @@ export function useAutoScrollBottom(
             }
         })
     }
-    const enabled = ref<boolean>(false)
+    const enabled = ref<boolean>(true)
     function handleDivScroll() {
+        calcScrollDistanceToBottom()
+
         if (divRef.value) {
             const div = divRef.value
 
@@ -25,6 +27,8 @@ export function useAutoScrollBottom(
         }
     }
     function adjust() {
+        calcScrollDistanceToBottom()
+
         nextTick(() => {
             if (divRef.value) {
                 const div = divRef.value
@@ -34,6 +38,30 @@ export function useAutoScrollBottom(
                 }
             }
         })
+    }
+    function enable() {
+        calcScrollDistanceToBottom()
+
+        enabled.value = true
+        adjust()
+    }
+
+
+    // scroll distance to bottom
+    const scrollDistanceToBottom = ref(0)
+    const isTotallyScrolled = computed(() => {
+        scrollDistanceToBottom.value <= 1
+    })
+    function calcScrollDistanceToBottom() {
+        if (divRef.value) {
+            const div = divRef.value
+
+            const scrollHeight = div.scrollHeight
+            const scrollTop = div.scrollTop
+            const clientHeight = div.clientHeight
+
+            scrollDistanceToBottom.value = scrollHeight - scrollTop - clientHeight
+        }
     }
 
     onMounted(() => {
@@ -52,9 +80,13 @@ export function useAutoScrollBottom(
     return {
         // shows if auto scroll enabled
         enabled,
+        enable,
         // scroll to bottom if auto scroll enabled
         adjust,
         // force scroll to bottom
-        scrollToBottom
+        scrollToBottom,
+
+        isTotallyScrolled,
+        scrollDistanceToBottom
     }
 }

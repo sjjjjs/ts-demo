@@ -1,19 +1,21 @@
 <template>
     <div class="page max-w-[1200px] mx-auto p-2">
-        <div class="py-2">
+        <div class="py-4">
             <el-row :gutter="24">
                 <el-col :span="12">
                     <el-input v-model="query"></el-input>
                 </el-col>
                 <el-col :span="12">
-                    <el-button :disabled="!query" @click="send">发送</el-button>
+                    <el-button :loading="queryMessageLoading" :disabled="!query" @click="send">发送</el-button>
                 </el-col>
             </el-row>
 
             <div class="p-4">
                 <div v-for="item in messageList">
-                    <p>query: {{ item.value.query }}</p>
-                    <p>answer: {{ item.value.answer }}</p>
+                    <p>query: </p>
+                    <markdown :value="item.value.query"></markdown>
+                    <p>answer:</p>
+                    <markdown :value="item.value.answer"></markdown>
                 </div>
             </div>
         </div>
@@ -22,6 +24,7 @@
 <script setup lang="ts">
 import { useConversation } from '@/libs/ai-chat/hooks/useConversation';
 import type { Dify } from '@/libs/ai-chat/types';
+import markdown from './markdown.vue';
 import { ref } from 'vue';
 
 interface UniversalMessage {
@@ -50,11 +53,21 @@ const streamingEventProcessorFactory: Dify.StreamingEventProcessorFactory<Univer
     let answer = ''
     let done: boolean = false
     let error: Error | null = null
+
+    let resolve: (() => void) | undefined = undefined
+    const p = new Promise<void>((r) => {
+        resolve = r as () => void
+    })
     return {
+        promise: () => {
+            return p
+        },
         handleEvent: (evt) => {
             if (evt.done) {
                 done = true
                 error = evt.error
+
+                resolve?.()
             } else if (evt.data) {
 
                 const event = evt.data.value.event
@@ -63,8 +76,6 @@ const streamingEventProcessorFactory: Dify.StreamingEventProcessorFactory<Univer
 
                 if (event === 'message') {
                     answer += value || ''
-                } else if (event === 'message_end') {
-                    done = true
                 }
             }
         },
@@ -81,7 +92,7 @@ const streamingEventProcessorFactory: Dify.StreamingEventProcessorFactory<Univer
     }
 }
 
-const { sendMessage, messageList } = useConversation({
+const { sendMessage, messageList, queryMessageLoading } = useConversation({
     baseUrl: '/api',
     apiKey: 'app-huIlz3nTd9FyPHbSgwRAj5JP',
     user: 'abc-123',

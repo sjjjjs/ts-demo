@@ -62,7 +62,7 @@ const {
     baseUrl: '/api',
     apiKey: 'app-huIlz3nTd9FyPHbSgwRAj5JP',
     user: 'abc-123',
-    limit: 1
+    limit: 5
 })
 // const difyApi = useDifyApi('/api', 'app-huIlz3nTd9FyPHbSgwRAj5JP', 'abc-123')
 
@@ -85,7 +85,6 @@ function handleRename(row: any) {
     renameDialogVisible.value = true
 }
 function handleConfirmRename() {
-    const newValue = inputValue.value
     renameConversation(renameId.value, inputValue.value).then(() => {
         renameDialogVisible.value = false
     })
