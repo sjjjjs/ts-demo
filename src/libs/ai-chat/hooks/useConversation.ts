@@ -1,17 +1,17 @@
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useDifyApi } from "./useDifyApi";
 import { useRequest } from "./useRequest";
-import type { Dify } from "../types";
+import type { BaseMessage, Dify, HistoryMessageProcessHandler, StreamingEventProcessorFactory } from "../types";
 import { useMessages } from "./useMessages";
 import { v4 as uuidv4 } from 'uuid';
 
-export function useConversation<T extends Dify.BaseMessage>(options: {
+export function useConversation<T extends BaseMessage>(options: {
     baseUrl: string,
     apiKey?: string,
     user?: string,
     id?: string,
-    historyMessageProssesor: Dify.HistoryMessageProcessHandler<T>,
-    streamingEventProcessorFactory: Dify.StreamingEventProcessorFactory<T>,
+    historyMessageProssesor: HistoryMessageProcessHandler<T>,
+    streamingEventProcessorFactory: StreamingEventProcessorFactory<T>,
     onMessageListChange?: () => void
 }) {
     const { baseUrl, apiKey, user, id, historyMessageProssesor } = options
@@ -60,6 +60,7 @@ export function useConversation<T extends Dify.BaseMessage>(options: {
     const currentTaskId = ref('')
     async function sendMessage(query: string) {
         lock.value = true
+        currentMessageId.value = ''
         const target = await difyApi.sendMessageStreaming({
             conversation_id: conversationId.value,
             query,
@@ -89,6 +90,12 @@ export function useConversation<T extends Dify.BaseMessage>(options: {
 
         await processor.promise()
         lock.value = false
+
+        const msgId = processor.getCurrent().id
+        if (msgId && !currentMessageId.value) {
+            currentMessageId.value = msgId
+            suggestedRequest.run(msgId)
+        }
     }
 
     const stopMessagePending = ref(false)
@@ -103,6 +110,30 @@ export function useConversation<T extends Dify.BaseMessage>(options: {
         }
     }
 
+    const currentMessageId = ref('')
+    const questions = ref<{
+        id: string
+        questions: string[]
+    }>({
+        id: '',
+        questions: []
+    })
+    const suggestedQuestions = computed(() => {
+        if (currentMessageId.value === questions.value.id && !lock.value) {
+            return questions.value.questions
+        }
+        return []
+    })
+    const suggestedRequest = useRequest(async (id: string) => {
+        const rsp = await difyApi.getSuggested({ message_id: id })
+        if (Array.isArray(rsp.data) && rsp.data.length && id === currentMessageId.value) {
+            questions.value.questions = [...rsp.data]
+        }
+        return []
+    }, {
+        manul: true
+    })
+
     return {
         historyMessageLoading: loading,
         queryMessageLoading: lock,
@@ -110,6 +141,7 @@ export function useConversation<T extends Dify.BaseMessage>(options: {
         sendMessage,
         messageList,
         stopMessage,
-        stopMessagePending
+        stopMessagePending,
+        suggestedQuestions
     }
 }

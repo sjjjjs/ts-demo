@@ -21,7 +21,7 @@
                         @click="() => feedback(item.id, 'like')">喜欢</el-button>
                     <el-button
                         :type="item.value.feedback && item.value.feedback.rating === 'dislike' ? 'primary' : 'default'"
-                        @click="() => feedback(item.id, 'dislike')">不喜欢</el-button>
+                        @click="() => feedback(item.value.id, 'dislike')">不喜欢</el-button>
                 </div>
             </template>
             <template v-else>
@@ -30,6 +30,14 @@
                 </div>
                 <div v-else class=" h-[60px]" v-loading="true"></div>
             </template>
+        </div>
+
+        <div class="suggested-questions max-w-[600px] mx-auto p-2 space-y-2 space-x-4 "
+            v-if="suggestedQuestions.length">
+            <div class="question p-2 inline border rounded-2xl border-amber-50 bg-amber-300 cursor-pointer select-none"
+                @click="() => sendMessage(q)" v-for="q in suggestedQuestions">{{
+                    q }}
+            </div>
         </div>
     </div>
     <div class="absolute z-10 bg-gray-200 left-0 bottom-0 right-0 p-2">
@@ -44,11 +52,12 @@
 </template>
 <script setup lang="ts">
 import { useConversation } from '@/libs/ai-chat/hooks/useConversation';
-import type { Dify } from '@/libs/ai-chat/types';
+import type { Dify, HistoryMessageProcessHandler, StreamingEventProcessorFactory } from '@/libs/ai-chat/types';
 import { ref } from 'vue';
 import markdown from './markdown.vue';
 import { useAutoScrollBottom } from '@/libs/ai-chat/hooks/useAutoScrollBottom';
 import dayjs from 'dayjs';
+import { useApplicationInfo } from '@/libs/ai-chat/hooks/useApplicationInfo';
 
 function formatTime(d: number) {
     return dayjs(d * 1000).format('YYYY-MM-DD HH:mm:ss')
@@ -73,7 +82,7 @@ interface UniversalMessage {
         content?: string
     }
 }
-const historyMessageProssesor: Dify.HistoryMessageProcessHandler<UniversalMessage> = (msg) => {
+const historyMessageProssesor: HistoryMessageProcessHandler<UniversalMessage> = (msg) => {
     return {
         isHistory: true,
         id: msg.id,
@@ -87,7 +96,7 @@ const historyMessageProssesor: Dify.HistoryMessageProcessHandler<UniversalMessag
     }
 }
 
-const streamingEventProcessorFactory: Dify.StreamingEventProcessorFactory<UniversalMessage> = (params) => {
+const streamingEventProcessorFactory: StreamingEventProcessorFactory<UniversalMessage> = (params) => {
     let id = ''
     let answer = ''
     let done: boolean = false
@@ -111,7 +120,11 @@ const streamingEventProcessorFactory: Dify.StreamingEventProcessorFactory<Univer
 
                 const event = evt.data.value.event
                 const value = (evt.data.value.answer || '') as string
+                const msgId = (evt.data.value.message_id || '') as string
 
+                if (!id) {
+                    id = msgId
+                }
 
                 if (event === 'message') {
                     answer += value || ''
@@ -138,7 +151,7 @@ const props = defineProps({
 
 const conversationId = props.conversationId || ''
 
-const { sendMessage, messageList, queryMessageLoading, stopMessage, feedback: fb } = useConversation({
+const { sendMessage, messageList, queryMessageLoading, stopMessage, feedback: fb, suggestedQuestions } = useConversation({
     baseUrl: '/api',
     apiKey: 'app-huIlz3nTd9FyPHbSgwRAj5JP',
     user: 'abc-123',
@@ -163,4 +176,10 @@ function feedback(id: string, rating: string, content?: string): void {
         console.log('r', r)
     })
 }
+
+const { info } = useApplicationInfo({
+    baseUrl: '/api',
+    apiKey: 'app-huIlz3nTd9FyPHbSgwRAj5JP',
+    user: 'abc-123',
+})
 </script>

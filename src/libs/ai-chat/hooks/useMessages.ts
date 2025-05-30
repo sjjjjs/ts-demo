@@ -1,11 +1,11 @@
 import { nextTick, ref, type Ref } from "vue"
 
-import { type Dify } from '@libs/ai-chat/types'
+import { type BaseMessage, type IdData } from '@libs/ai-chat/types'
 
-export function useMessages<T extends Dify.BaseMessage>(options: {
+export function useMessages<T extends BaseMessage>(options: {
     onChange?: () => void
 } = {}) {
-    const messaegList = ref([]) as Ref<Dify.IdData<T>[]>
+    const messaegList = ref([]) as Ref<IdData<T>[]>
 
     let calling: boolean = false
     function dataChangeHook() {

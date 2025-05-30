@@ -1,4 +1,5 @@
 import { ref } from "vue"
+import { v4 as uuidv4 } from 'uuid';
 
 type RequestFn<T> = (...args: any[]) => Promise<T>
 
@@ -17,14 +18,19 @@ export function useRequest<T>(
     const error = ref<Error>()
     const loading = ref(false)
 
+    let lastTid: string = ''
     const run = async (...args: any[]): Promise<T> => {
+        const tid = uuidv4()
+        lastTid = tid
         loading.value = true
         error.value = undefined
 
         try {
             const response = await requestFn(...args)
 
-            data.value = response
+            if (lastTid === tid) {
+                data.value = response
+            }
             onSuccess?.(response)
             return response
         } catch (err) {

@@ -4,6 +4,46 @@ export interface Message<T = {}> {
     data: T
 }
 
+export interface IdData<T> {
+    id: string
+    value: T
+}
+
+export interface BaseMessage {
+    id: string
+    query: string
+    answer: string
+    feedback?: {
+        rating: string
+        content?: string
+    },
+    suggested?: string[]
+}
+
+export type HistoryMessageProcessHandler<T> = (message: Dify.Message) => T
+
+export interface StreamingEventInfo {
+    done: boolean,
+    error: Error | null,
+    data?: {
+        timestamp: number,
+        value: Dify.ChunkChatCompletionResponse
+    }
+}
+
+
+export interface StreamingEventProcessor<T> {
+    handleEvent: (evt: StreamingEventInfo) => void
+    getCurrent: () => T
+    promise: () => Promise<void>
+}
+export type StreamingEventProcessorFactory<T> = (params: {
+    query: string,
+    conversationId: string,
+    inputs: any
+}) => StreamingEventProcessor<T>
+
+// dify 服务返回的标准数据结构
 export namespace Dify {
     export interface Conversation {
         id: string
@@ -39,66 +79,4 @@ export namespace Dify {
         event: string
         [key: string]: unknown
     }
-
-    export interface IdData<T> {
-        id: string
-        value: T
-    }
-
-    export interface BaseMessage {
-        id: string
-        query: string
-        answer: string
-        feedback?: {
-            rating: string
-            content?: string
-        }
-    }
-
-    export type HistoryMessageProcessHandler<T> = (message: Message) => T
-
-    export interface StreamingEventInfo {
-        done: boolean,
-        error: Error | null,
-        data?: {
-            timestamp: number,
-            value: ChunkChatCompletionResponse
-        }
-    }
-
-    // // 标准流式数据块（数据对象）
-    // interface StreamingChunk<T> {
-    //     timestamp: number
-    //     done: boolean
-    //     error: Error | null
-    //     data?: T
-    // }
-    // // 标准流式数据块生产端（一个源可以被多个接收器监听）
-    // interface StreamingTarget<T> {
-    //     connect: (listener: StreamingListener<T>) => boolean
-    //     disconnect: (listener: StreamingListener<T>) => boolean
-    // }
-
-    // // 标准流式数据块接收端（一个接收器只对接一个源）
-    // interface StreamingListener<T> {
-    //     watch: (chunk: StreamingChunk<T>) => void
-    // }
-
-
-    // interface MessageBase { }
-    // interface MessageAssembler {
-    //     assemble(): MessageBase
-    // }
-
-
-    export interface StreamingEventProcessor<T> {
-        handleEvent: (evt: StreamingEventInfo) => void
-        getCurrent: () => T
-        promise: () => Promise<void>
-    }
-    export type StreamingEventProcessorFactory<T> = (params: {
-        query: string,
-        conversationId: string,
-        inputs: any
-    }) => StreamingEventProcessor<T>
 }
