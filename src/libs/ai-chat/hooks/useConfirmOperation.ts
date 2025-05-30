@@ -2,8 +2,10 @@ import { ref } from "vue";
 
 type Status = 'init' | 'confirming' | 'canceled' | 'processing' | 'processed'
 
-interface UseConfirmOperationOptions<T, V> {
+interface UseConfirmOperationOptions<T, V, N = any> {
     operation: (sub: T, val: V) => void | Promise<void>
+    onSuccess?: (data: N) => void
+    onError?: (err: Error) => void
 }
 export function useConfirmOperation<T, V>(
     options: UseConfirmOperationOptions<T, V>
@@ -25,15 +27,12 @@ export function useConfirmOperation<T, V>(
         if (!subject.value) {
             throw new Error('No subject provided.')
         }
-        try {
-            await operation(subject.value, val)
-        } catch (err: any) {
-            throw err instanceof Error ? err : new Error(err?.message || 'System Exception.')
-        }
+
+        return await operation(subject.value, val)
+
     }
 
     function apply(sub: T): boolean {
-        console.log('sub', sub)
         if (status.value === 'processed' || status.value === 'canceled') {
             reset()
         }
@@ -50,8 +49,15 @@ export function useConfirmOperation<T, V>(
 
             p.then(() => {
                 return operating(val)
-            }).then(() => {
+            }).then((data) => {
                 status.value = 'processed'
+                options.onSuccess?.(data)
+            }).catch((err: any) => {
+                options.onError?.(
+                    err instanceof Error
+                        ? err
+                        : new Error(err?.message || 'System Exception.')
+                )
             })
             return true
         }

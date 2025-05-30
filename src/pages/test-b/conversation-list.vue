@@ -36,12 +36,16 @@
     </el-dialog>
 
 
-    <el-dialog title="提示" :model-value="deleteOperation.status.value === 'confirming'">
+    <el-dialog title="提示"
+        :model-value="deleteOperation.status.value === 'confirming' || deleteOperation.status.value === 'processing'"
+        @close="deleteOperation.cancelApply">
         <p>请确认是否删除对话：{{ deleteOperation.subject.value?.name }}({{ deleteOperation.subject.value?.id }})</p>
 
         <template #footer>
-            <el-button @click="deleteOperation.cancelApply">取消</el-button>
-            <el-button @click="deleteOperation.confirmApply">确定</el-button>
+            <el-button :disabled="deleteOperation.status.value === 'processing'"
+                @click="deleteOperation.cancelApply">取消</el-button>
+            <el-button :loading="deleteOperation.status.value === 'processing'"
+                @click="deleteOperation.confirmApply">确定</el-button>
         </template>
     </el-dialog>
 </template>

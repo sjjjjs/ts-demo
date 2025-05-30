@@ -3,6 +3,8 @@ import { request, sseRequest } from '@libs/ai-chat/utils/requestUtil'
 import { safeJsonParse, safeJsonStringify } from '../utils/jsonUtil'
 import type { Dify } from '../types'
 
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms))
+
 export function useDifyApi(
     baseUrl: string,
     apiKey?: string,
@@ -88,6 +90,7 @@ export function useDifyApi(
     async function deleteConversation(params: {
         conversation_id: string
     } & Cancellable) {
+        await delay(3000)
         return request<DeleteConversationResponse>({
             method: 'DELETE',
             url: apiOf(baseUrl, `/conversations/${params.conversation_id}`),
