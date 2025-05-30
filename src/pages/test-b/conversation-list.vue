@@ -2,7 +2,7 @@
 
     <div class="conversation-list h-[100%] overflow-auto space-y-1 p-2 rounded-2xl">
         <div class="conversation-item p-2 hover:bg-amber-50 cursor-pointer" @click="() => handleClick('')">
-            <span>新对话</span>
+            <span>新对话{{ deleteOperation.status.value }}</span>
         </div>
         <div :class="{
             'conversation-item p-2 hover:bg-amber-50 cursor-pointer relative group': true,
@@ -34,9 +34,20 @@
             <el-button @click="handleConfirmRename">确定</el-button>
         </template>
     </el-dialog>
+
+
+    <el-dialog title="提示" :model-value="deleteOperation.status.value === 'confirming'">
+        <p>请确认是否删除对话：{{ deleteOperation.subject.value?.name }}({{ deleteOperation.subject.value?.id }})</p>
+
+        <template #footer>
+            <el-button @click="deleteOperation.cancelApply">取消</el-button>
+            <el-button @click="deleteOperation.confirmApply">确定</el-button>
+        </template>
+    </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { useConfirmOperation } from '@/libs/ai-chat/hooks/useConfirmOperation';
 import { useConversationList } from '@/libs/ai-chat/hooks/useConversationList';
 import dayjs from 'dayjs';
 import { ref } from 'vue';
@@ -44,6 +55,8 @@ import { ref } from 'vue';
 function formatTime(num: number): string {
     return dayjs(num * 1000).format('YYYY-MM-DD HH:mm:ss')
 }
+
+
 
 const {
     limit,
@@ -61,6 +74,12 @@ const {
     limit: 20
 })
 
+const deleteOperation = useConfirmOperation<{ name: string, id: string }, any>({
+    operation: async (target) => {
+        await deleteConversation(target.id)
+    }
+})
+
 const inputValue = ref('')
 const renameId = ref('')
 const renameDialogVisible = ref(false)
@@ -68,8 +87,6 @@ const renameDialogVisible = ref(false)
 function handleConfirmRename() {
     renameConversation(renameId.value, inputValue.value).then(() => {
         renameDialogVisible.value = false
-    }).then(() => {
-        reload()
     })
 }
 
@@ -87,10 +104,8 @@ function handleCommand(c: string, i: { id: string, name: string }) {
             conversationId.value = ''
         }
 
-        deleteConversation(i.id).then(() => {
-            reload()
-
-        })
+        // deleteConversation(i.id)
+        deleteOperation.apply(i)
     }
 }
 

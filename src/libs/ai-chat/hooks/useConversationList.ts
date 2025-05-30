@@ -25,7 +25,7 @@ export function useConversationList(options: {
     const hasMore = ref(true)
 
     const {
-        run,
+        run: fetchConversationList,
         loading
     } = useRequest(async () => {
         const rsp = await difyApi.getConversations({
@@ -37,14 +37,15 @@ export function useConversationList(options: {
             hasMore.value = false
         }
 
-        list.value = [...list.value, ...rsp.data]
+        list.value = [...rsp.data]
     })
 
     async function deleteConversation(id: string) {
         return difyApi.deleteConversation({
             conversation_id: id
         }).finally(() => {
-            run()
+            console.log('update fater delete conversation')
+            fetchConversationList()
         })
     }
     async function renameConversation(id: string, name: string) {
@@ -52,7 +53,7 @@ export function useConversationList(options: {
             conversation_id: id,
             name
         }).finally(() => {
-            run()
+            fetchConversationList()
         })
     }
 
@@ -61,14 +62,14 @@ export function useConversationList(options: {
         lastId.value = undefined
         hasMore.value = true
 
-        run()
+        fetchConversationList()
     }
     function loadMore() {
         if (!hasMore.value) {
             return
         }
         lastId.value = list.value?.[list.value?.length - 1]?.id || undefined
-        run()
+        fetchConversationList()
     }
 
     return {

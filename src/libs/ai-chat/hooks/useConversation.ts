@@ -1,7 +1,7 @@
 import { computed, ref } from "vue";
 import { useDifyApi } from "./useDifyApi";
 import { useRequest } from "./useRequest";
-import type { BaseMessage, Dify, HistoryMessageProcessHandler, StreamingEventProcessorFactory } from "../types";
+import type { BaseMessage, HistoryMessageProcessHandler, StreamingEventProcessorFactory } from "../types";
 import { useMessages } from "./useMessages";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,7 +9,9 @@ export function useConversation<T extends BaseMessage>(options: {
     baseUrl: string,
     apiKey?: string,
     user?: string,
+
     id?: string,
+
     historyMessageProssesor: HistoryMessageProcessHandler<T>,
     streamingEventProcessorFactory: StreamingEventProcessorFactory<T>,
     onMessageListChange?: () => void

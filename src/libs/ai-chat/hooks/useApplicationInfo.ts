@@ -10,7 +10,6 @@ export function useApplicationInfo(
         requires?: ('info' | 'meta' | 'parameters')[]
     }
 ) {
-
     const {
         baseUrl,
         apiKey,
