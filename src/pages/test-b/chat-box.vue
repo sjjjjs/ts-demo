@@ -1,7 +1,7 @@
 <template>
-    <div class="h-[100%] overflow-auto pb-[80px] bg-white" ref="containerRef">
-        <div class="max-w-[600px] mx-auto p-2 " v-for="item in messageList"
-            :data-source="JSON.stringify(item, null, '  ')" :key="item.id">
+    <div class="h-[100%] overflow-auto pb-[80px] bg-white" ref="containerRef"
+        :data-source="JSON.stringify(suggestedQuestions, null, '  ')">
+        <div class="max-w-[600px] mx-auto p-2 " v-for="item in messageList" :key="item.id">
             <div class="pb-2 text-xs text-center">{{ formatTime(item.value.createAt) }}</div>
             <div class=" font-bold p-4 border border-blue-200 bg-blue-100 rounded-xl">
                 <el-tooltip :content="item.id" placement="top">
@@ -18,10 +18,18 @@
                     反馈：
                     <el-button
                         :type="item.value.feedback && item.value.feedback.rating === 'like' ? 'primary' : 'default'"
-                        @click="() => feedback(item.id, 'like')">喜欢</el-button>
+                        @click="() => fb({
+                            dataId: item.id,
+                            id: item.value.id,
+                            rating: 'like'
+                        })">喜欢</el-button>
                     <el-button
                         :type="item.value.feedback && item.value.feedback.rating === 'dislike' ? 'primary' : 'default'"
-                        @click="() => feedback(item.value.id, 'dislike')">不喜欢</el-button>
+                        @click="() => fb({
+                            dataId: item.id,
+                            id: item.value.id,
+                            rating: 'dislike'
+                        })">不喜欢</el-button>
                 </div>
             </template>
             <template v-else>
@@ -52,7 +60,7 @@
 </template>
 <script setup lang="ts">
 import { useConversation } from '@/libs/ai-chat/hooks/useConversation';
-import type { Dify, HistoryMessageProcessHandler, StreamingEventProcessorFactory } from '@/libs/ai-chat/types';
+import type { HistoryMessageProcessHandler, StreamingEventProcessorFactory } from '@/libs/ai-chat/types';
 import { ref } from 'vue';
 import markdown from './markdown.vue';
 import { useAutoScrollBottom } from '@/libs/ai-chat/hooks/useAutoScrollBottom';
@@ -171,11 +179,7 @@ function send() {
 function onMessageListChange() {
     adjust()
 }
-function feedback(id: string, rating: string, content?: string): void {
-    fb(id, rating, content).then(r => {
-        console.log('r', r)
-    })
-}
+
 
 const { info } = useApplicationInfo({
     baseUrl: '/api',

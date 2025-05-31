@@ -1,19 +1,20 @@
 <template>
 
     <div class="conversation-list h-[100%] overflow-auto space-y-1 p-2 rounded-2xl">
-        <div class="conversation-item p-2 hover:bg-amber-50 cursor-pointer" @click="() => handleClick('')">
-            <span>新对话{{ deleteOperation.status.value }}</span>
+        <div class="conversation-item p-2 hover:bg-amber-50 cursor-pointer" @click="() => setCurrent('')">
+            <el-button @click="() => setCurrent('')" type="primary">新对话</el-button>
+            <el-button @click="refresh" :loading="loading">刷新</el-button>
         </div>
         <div :class="{
             'conversation-item p-2 hover:bg-amber-50 cursor-pointer relative group': true,
-            'bg-amber-100': item.id === conversationId
-        }" v-for="item in conversationList" @click="() => handleClick(item.id)">
+            'bg-amber-100': item.id === current
+        }" v-for="item in list" @click="() => setCurrent(item.id)">
             <div class=" overflow-ellipsis overflow-hidden whitespace-nowrap" :key="item.id">
                 <span>{{ item.name }}</span>
             </div>
             <div class=" text-sm mt-2">{{ formatTime(item.created_at) }}</div>
             <div class=" absolute top-0 right-0 bottom-0 hidden justify-center items-center group-hover:flex">
-                <el-dropdown @command="(c: string) => handleCommand(c, item)">
+                <el-dropdown :teleported="false" @command="(c: string) => handleCommand(c, item)">
                     <el-button plain>操作</el-button>
                     <template #dropdown>
                         <el-dropdown-menu>
@@ -52,35 +53,35 @@
 
 <script setup lang="ts">
 import { useConfirmOperation } from '@/libs/ai-chat/hooks/useConfirmOperation';
-import { useConversationList } from '@/libs/ai-chat/hooks/useConversationList';
 import dayjs from 'dayjs';
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 
 function formatTime(num: number): string {
     return dayjs(num * 1000).format('YYYY-MM-DD HH:mm:ss')
 }
 
-
+const props = defineProps<{
+    list: any;
+    current: string;
+    loading: boolean;
+    setCurrent: (val: string) => void
+    remove: (id: string) => Promise<void>
+    rename: (id: string, name: string) => Promise<void>
+    refresh: () => void
+}>()
 
 const {
-    limit,
-    loading,
-    hasMore,
-    conversationList,
-    deleteConversation,
-    renameConversation,
-    reload,
-    loadMore
-} = useConversationList({
-    baseUrl: '/api',
-    apiKey: 'app-huIlz3nTd9FyPHbSgwRAj5JP',
-    user: 'abc-123',
-    limit: 20
-})
+    current,
+    setCurrent,
+    rename,
+    remove
+} = props
+
+
 
 const deleteOperation = useConfirmOperation<{ name: string, id: string }, any>({
     operation: async (target) => {
-        await deleteConversation(target.id)
+        await remove(target.id)
     }
 })
 
@@ -89,14 +90,12 @@ const renameId = ref('')
 const renameDialogVisible = ref(false)
 
 function handleConfirmRename() {
-    renameConversation(renameId.value, inputValue.value).then(() => {
+    rename(renameId.value, inputValue.value).then(() => {
         renameDialogVisible.value = false
     })
 }
 
-function handleClick(id: string) {
-    conversationId.value = id
-}
+
 
 function handleCommand(c: string, i: { id: string, name: string }) {
     if (c === 'rename') {
@@ -104,8 +103,8 @@ function handleCommand(c: string, i: { id: string, name: string }) {
         renameId.value = i.id
         inputValue.value = i.name
     } else if (c === 'delete') {
-        if (conversationId.value === i.id) {
-            conversationId.value = ''
+        if (current === i.id) {
+            setCurrent('')
         }
 
         // deleteConversation(i.id)
@@ -113,6 +112,6 @@ function handleCommand(c: string, i: { id: string, name: string }) {
     }
 }
 
-const conversationId = defineModel<string>()
+
 
 </script>

@@ -43,13 +43,16 @@ export function useConversation<T extends BaseMessage>(options: {
         }
     })
 
-    async function feedback(id: string, rating: string, content?: string) {
+    async function feedback(options: {
+        id: string, rating: string, content?: string, dataId?: string
+    }) {
+        const { id, rating, content, dataId } = options
         return difyApi.feedback({
             message_id: id,
             rating,
             content
         }).then(() => {
-            overrideMessage(id, {
+            overrideMessage(dataId || id, {
                 feedback: {
                     rating,
                     content
@@ -129,6 +132,7 @@ export function useConversation<T extends BaseMessage>(options: {
     const suggestedRequest = useRequest(async (id: string) => {
         const rsp = await difyApi.getSuggested({ message_id: id })
         if (Array.isArray(rsp.data) && rsp.data.length && id === currentMessageId.value) {
+            questions.value.id = id
             questions.value.questions = [...rsp.data]
         }
         return []
